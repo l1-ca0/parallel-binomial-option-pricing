@@ -1,0 +1,39 @@
+# Build directories
+build/
+bin/
+*.o
+*.out
+
+# CUDA compilation
+*.cubin
+*.ptx
+*.fatbin
+
+# Results
+benchmarks/results/*.csv
+benchmarks/results/*.txt
+!benchmarks/results/README.md
+
+# Python
+__pycache__/
+*.pyc
+analysis/*.png
+analysis/*.pdf
+!analysis/example_plots/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~
+
+# macOS
+.DS_Store
+
+# Profiling output
+*.nvvp
+*.qdrep
+*.sqlite
+
+# Logs
+*.log
