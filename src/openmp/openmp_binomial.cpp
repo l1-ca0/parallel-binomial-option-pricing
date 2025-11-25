@@ -17,14 +17,20 @@
  * - Load imbalance: at t=0, only 1 node; at t=N, N+1 nodes
  * - Memory bandwidth: multiple threads reading/writing shared arrays
  * - Cache effects: each thread's access pattern affects others
+ *
+ * Scheduling choice:
+ * - Static scheduling used for predictable, uniform workload
+ * - Each thread gets a contiguous chunk, which is good for cache locality
+ * - For this regular computation pattern, static performs better than dynamic
  */
+
 double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads) {
   // Set number of threads if specified
   if (num_threads > 0) {
     omp_set_num_threads(num_threads);
   }
 
-  // Compute binomial parameters
+  // Compute binomial parameters (includes validation)
   BinomialParams params = computeBinomialParams(opt);
 
   // Allocate space for option values at current time step
@@ -32,6 +38,7 @@ double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads) {
 
   // Precompute powers of u and d for efficiency
   // This avoids redundant pow() calls in the parallel loop
+  // Improves both performance and numerical stability
   std::vector<double> u_pow(opt.N + 1); // u^i for i=0..N
   std::vector<double> d_pow(opt.N + 1); // d^i for i=0..N
 
@@ -44,7 +51,10 @@ double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads) {
 
 // Step 1: Initialize terminal values at expiration (t = N)
 // This can be parallelized since all computations are independent
-#pragma omp parallel for schedule(static)
+// Variable scoping:
+// - shared: V, u_pow, d_pow, opt, params (read by all threads)
+// - private: i, S (unique to each thread iteration)
+#pragma omp parallel for schedule(static) shared(V, u_pow, d_pow, opt, params)
   for (int i = 0; i <= opt.N; ++i) {
     // Stock price: S0 * u^i * d^(N-i)
     double S = opt.S0 * u_pow[i] * d_pow[opt.N - i];
@@ -62,7 +72,12 @@ double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads) {
   for (int t = opt.N - 1; t >= 0; --t) {
 // Parallelize across the t+1 nodes at this time step
 // Note: As t decreases, parallelism declines (load imbalance)
-#pragma omp parallel for schedule(static)
+//
+// Variable scoping:
+// - shared: V, u_pow, d_pow, opt, params, t (same for all threads)
+// - private: i, S, V_hold, V_exercise (unique per iteration)
+#pragma omp parallel for schedule(static)                                      \
+    shared(V, u_pow, d_pow, opt, params, t) private(S, V_hold, V_exercise)
     for (int i = 0; i <= t; ++i) {
       // Stock price at node (t, i)
       double S = opt.S0 * u_pow[i] * d_pow[t - i];
@@ -112,7 +127,7 @@ double priceEuropeanOptionOpenMP(const OptionParams &opt, int num_threads) {
   }
 
 // Initialize terminal values
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) shared(V, u_pow, d_pow, opt, params)
   for (int i = 0; i <= opt.N; ++i) {
     double S = opt.S0 * u_pow[i] * d_pow[opt.N - i];
     if (opt.isCall) {
@@ -124,7 +139,7 @@ double priceEuropeanOptionOpenMP(const OptionParams &opt, int num_threads) {
 
   // Backward induction - European (no early exercise)
   for (int t = opt.N - 1; t >= 0; --t) {
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) shared(V, params, t)
     for (int i = 0; i <= t; ++i) {
       // European: only continuation value (no max with exercise)
       V[i] = params.discount * (params.p * V[i + 1] + (1.0 - params.p) * V[i]);
