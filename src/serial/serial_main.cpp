@@ -16,7 +16,17 @@ int main(int argc, char **argv) {
   opt.isCall = false;
 
   if (argc > 1) {
-    opt.N = std::atoi(argv[1]);
+    try {
+      int n = std::stoi(argv[1]);
+      if (n <= 0) {
+        std::cerr << "Error: N must be positive" << std::endl;
+        return 1;
+      }
+      opt.N = n;
+    } catch (const std::exception &e) {
+      std::cerr << "Error: Invalid N value: " << argv[1] << std::endl;
+      return 1;
+    }
   }
 
   std::cout << "=== Serial Binomial Option Pricer ===" << std::endl;
@@ -33,7 +43,7 @@ int main(int argc, char **argv) {
   std::cout << "  American Option Price: " << american_price << std::endl;
   timer.print("  Execution Time");
 
-  long long total_nodes = static_cast<long long>(opt.N + 1) * (opt.N + 2) / 2;
+  long long total_nodes = (static_cast<long long>(opt.N) + 1) * (opt.N + 2) / 2;
   std::cout << "  Nodes Computed:        " << total_nodes << std::endl;
   std::cout << "  Throughput:            " << std::setprecision(2)
             << (static_cast<double>(total_nodes) / timer.elapsed_ms())

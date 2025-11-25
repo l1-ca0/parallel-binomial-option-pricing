@@ -31,10 +31,32 @@ int main(int argc, char **argv) {
 
   // Parse command line arguments
   if (argc > 1) {
-    opt.N = std::atoi(argv[1]);
+    try {
+      int n = std::stoi(argv[1]);
+      if (n <= 0) {
+        std::cerr << "Error: N must be positive" << std::endl;
+        return 1;
+      }
+      opt.N = n;
+    } catch (const std::exception &e) {
+      std::cerr << "Error: Invalid N value: " << argv[1] << std::endl;
+      std::cerr << "Usage: " << argv[0] << " [N] [num_threads]" << std::endl;
+      return 1;
+    }
   }
+
   if (argc > 2) {
-    num_threads = std::atoi(argv[2]);
+    try {
+      int nt = std::stoi(argv[2]);
+      if (nt <= 0) {
+        std::cerr << "Error: num_threads must be positive" << std::endl;
+        return 1;
+      }
+      num_threads = nt;
+    } catch (const std::exception &e) {
+      std::cerr << "Error: Invalid num_threads value: " << argv[2] << std::endl;
+      return 1;
+    }
   }
 
   std::cout << "=== OpenMP Binomial Option Pricer ===" << std::endl;
@@ -109,7 +131,15 @@ int main(int argc, char **argv) {
                                     american_price_omp, "OpenMP");
 
   // Speedup analysis
-  double speedup = serial_time / omp_time;
+  if (omp_time < 1e-6) {
+    std::cout << "  Speedup:                N/A (time too small)" << std::endl;
+  } else {
+    double speedup = serial_time / omp_time;
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "  Speedup:                " << speedup << "x" << std::endl;
+    std::cout << "  Parallel Efficiency:    "
+              << (speedup / actual_threads * 100.0) << "%" << std::endl;
+  }
   std::cout << "=== Performance Analysis ===" << std::endl;
   std::cout << std::fixed << std::setprecision(2);
   std::cout << "  Speedup:                " << speedup << "x" << std::endl;
