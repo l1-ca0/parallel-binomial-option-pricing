@@ -236,7 +236,7 @@ int main(int argc, char **argv) {
         std::cout << std::endl;
 
       // Show speedup for large N
-      if (verbose && test.N >= 5000 && serial_time > 0) {
+      if (verbose && serial_time > 0) {
         double speedup = serial_time / openmp_time;
         std::cout << "  Speedup: " << std::setprecision(2) << speedup << "x"
                   << std::endl;
