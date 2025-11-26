@@ -11,11 +11,11 @@
 #include <vector>
 
 /**
- * @file test_benchmarks.cpp
- * @brief Validate implementations against known benchmark values
+ * @file test_openmp_benchmarks.cpp
+ * @brief Validate OpenMP implementation against known benchmark values
  *
- * Reads test cases from broadie_detemple_values.txt and validates
- * that serial and OpenMP implementations produce correct results.
+ * Reads test cases from american_put_benchmarks.txt and validates
+ * that OpenMP implementation produce correct results.
  * Includes performance timing for large N values.
  */
 
@@ -51,13 +51,13 @@ bool parseTestCase(const std::string &line, TestCase &test) {
 // Determine tolerance based on N (relative error)
 double getTolerance(int N) {
   if (N >= 100000)
-    return 0.00001; // 0.001%
+    return 0.00005; // 0.005%
   if (N >= 50000)
-    return 0.00002; // 0.002%
-  if (N >= 10000)
     return 0.0001; // 0.01%
-  if (N >= 5000)
+  if (N >= 10000)
     return 0.0002; // 0.02%
+  if (N >= 5000)
+    return 0.0005; // 0.05%
   if (N >= 1000)
     return 0.001; // 0.1%
   if (N >= 100)

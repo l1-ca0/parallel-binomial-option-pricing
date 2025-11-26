@@ -9,7 +9,7 @@
 #include <vector>
 
 /**
- * @file test_correctness.cpp
+ * @file test_openmp_correctness.cpp
  * @brief Unit tests for algorithmic correctness
  *
  * Tests fundamental properties of option pricing:
@@ -20,8 +20,7 @@
  * 5. Convergence as N increases
  * 6. Edge cases and boundary conditions
  *
- * Unlike test_benchmarks.cpp which validates against known values,
- * this tests mathematical properties that must hold.
+ * Tests mathematical properties that must hold.
  */
 
 // Test result tracking
@@ -80,28 +79,10 @@ TEST(put_price_positive) {
   ASSERT(price >= 0, "Put price must be non-negative");
 }
 
-TEST(call_price_positive) {
-  OptionParams opt = createTestOption();
-  opt.isCall = true;
-  double price = priceAmericanOptionSerial(opt);
-  ASSERT(price >= 0, "Call price must be non-negative");
-}
-
 TEST(put_price_below_strike) {
   OptionParams opt = createTestOption();
   double price = priceAmericanOptionSerial(opt);
   ASSERT(price <= opt.K, "American put price cannot exceed strike price");
-}
-
-TEST(call_price_below_spot_plus_strike) {
-  // American call upper bound: C <= S0
-  // For non-dividend paying stock, American call = European call
-  // European call upper bound is S0 (stock itself is better)
-  OptionParams opt = createTestOption();
-  opt.isCall = true;
-  double price = priceAmericanOptionSerial(opt);
-  ASSERT(price <= opt.S0 + 0.01,
-         "American call price should not significantly exceed spot price");
 }
 
 TEST(put_price_above_intrinsic) {
@@ -112,15 +93,6 @@ TEST(put_price_above_intrinsic) {
          "Put price must be at least intrinsic value");
 }
 
-TEST(call_price_above_intrinsic) {
-  OptionParams opt = createTestOption();
-  opt.isCall = true;
-  double price = priceAmericanOptionSerial(opt);
-  double intrinsic = std::max(opt.S0 - opt.K, 0.0);
-  ASSERT(price >= intrinsic - 1e-10,
-         "Call price must be at least intrinsic value");
-}
-
 // ========== AMERICAN VS EUROPEAN TESTS ==========
 
 TEST(american_put_ge_european) {
@@ -129,15 +101,6 @@ TEST(american_put_ge_european) {
   double european = priceEuropeanOptionSerial(opt);
   ASSERT(american >= european - 1e-10,
          "American put must be worth at least as much as European put");
-}
-
-TEST(american_call_ge_european) {
-  OptionParams opt = createTestOption();
-  opt.isCall = true;
-  double american = priceAmericanOptionSerial(opt);
-  double european = priceEuropeanOptionSerial(opt);
-  ASSERT(american >= european - 1e-10,
-         "American call must be worth at least as much as European call");
 }
 
 TEST(american_put_early_exercise_premium_itm) {
@@ -165,19 +128,6 @@ TEST(put_price_decreases_with_spot) {
   double price2 = priceAmericanOptionSerial(opt);
 
   ASSERT(price1 > price2, "Put price should decrease as spot increases");
-}
-
-TEST(call_price_increases_with_spot) {
-  // As spot price increases, call value should increase
-  OptionParams opt = createTestOption();
-  opt.isCall = true;
-  opt.S0 = 90.0;
-  double price1 = priceAmericanOptionSerial(opt);
-
-  opt.S0 = 110.0;
-  double price2 = priceAmericanOptionSerial(opt);
-
-  ASSERT(price2 > price1, "Call price should increase as spot increases");
 }
 
 TEST(put_price_increases_with_strike) {
@@ -243,8 +193,8 @@ TEST(convergence_with_N) {
 TEST(zero_volatility) {
   // With zero volatility, American put = max(K - S, 0) discounted
   OptionParams opt = createTestOption();
-  opt.sigma =
-      1e-5; // Small enough to approximate zero, but avoids u≈d instability
+  opt.sigma = 1e-5; // Small enough to approximate zero
+  opt.r = 0.0;      // Set r=0 to ensure p is valid (u > e^rt > d condition)
   opt.S0 = 90.0;
   opt.K = 100.0;
   opt.N = 100;
@@ -417,18 +367,13 @@ int main() {
 
   // Run all tests
   run_test_put_price_positive();
-  run_test_call_price_positive();
   run_test_put_price_below_strike();
-  run_test_call_price_below_spot_plus_strike();
   run_test_put_price_above_intrinsic();
-  run_test_call_price_above_intrinsic();
 
   run_test_american_put_ge_european();
-  run_test_american_call_ge_european();
   run_test_american_put_early_exercise_premium_itm();
 
   run_test_put_price_decreases_with_spot();
-  run_test_call_price_increases_with_spot();
   run_test_put_price_increases_with_strike();
   run_test_price_increases_with_volatility();
   run_test_price_increases_with_time();
