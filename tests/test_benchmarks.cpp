@@ -66,7 +66,7 @@ double getTolerance(int N) {
 }
 
 int main(int argc, char **argv) {
-  std::string filename = "tests/test_data/broadie_detemple_values.txt";
+  std::string filename = "tests/test_data/american_put_benchmarks.txt";
   bool verbose = false;
   bool skip_slow = false;
 
