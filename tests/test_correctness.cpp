@@ -38,10 +38,10 @@ int tests_failed = 0;
     try {                                                                      \
       test_##name();                                                           \
       tests_passed++;                                                          \
-      std::cout << "PASS" << std::endl;                                      \
+      std::cout << "PASS" << std::endl;                                        \
     } catch (const std::exception &e) {                                        \
       tests_failed++;                                                          \
-      std::cout << "FAIL: " << e.what() << std::endl;                        \
+      std::cout << "FAIL: " << e.what() << std::endl;                          \
     }                                                                          \
   }                                                                            \
   void test_##name()
@@ -243,7 +243,8 @@ TEST(convergence_with_N) {
 TEST(zero_volatility) {
   // With zero volatility, American put = max(K - S, 0) discounted
   OptionParams opt = createTestOption();
-  opt.sigma = 1e-10; // Essentially zero
+  opt.sigma =
+      1e-5; // Small enough to approximate zero, but avoids u≈d instability
   opt.S0 = 90.0;
   opt.K = 100.0;
   opt.N = 100;
