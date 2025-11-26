@@ -37,3 +37,6 @@ analysis/*.pdf
 
 # Logs
 *.log
+
+*.png
+*.tex
