@@ -34,11 +34,11 @@ double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads) {
   BinomialParams params = computeBinomialParams(opt);
 
   // Allocate space for option values at current time step
-  std::vector<double> V(opt.N + 1);
+  // We need double buffering to avoid race conditions in the parallel loop
+  std::vector<double> V_in(opt.N + 1);
+  std::vector<double> V_out(opt.N + 1);
 
   // Precompute powers of u and d for efficiency
-  // This avoids redundant pow() calls in the parallel loop
-  // Improves both performance and numerical stability
   std::vector<double> u_pow(opt.N + 1); // u^i for i=0..N
   std::vector<double> d_pow(opt.N + 1); // d^i for i=0..N
 
@@ -49,40 +49,36 @@ double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads) {
     d_pow[i] = d_pow[i - 1] * params.d;
   }
 
-// Step 1: Initialize terminal values at expiration (t = N)
-// This can be parallelized since all computations are independent
-// Variable scoping:
-// - shared: V, u_pow, d_pow, opt, params (read by all threads)
-// - private: i, S (unique to each thread iteration)
-#pragma omp parallel for schedule(static) shared(V, u_pow, d_pow, opt, params)
+  // Step 1: Initialize terminal values at expiration (t = N)
+  // Initialize into V_in (which represents values at time t+1)
+#pragma omp parallel for schedule(static)                                      \
+    shared(V_in, u_pow, d_pow, opt, params)
   for (int i = 0; i <= opt.N; ++i) {
     // Stock price: S0 * u^i * d^(N-i)
     double S = opt.S0 * u_pow[i] * d_pow[opt.N - i];
 
     // Terminal value = intrinsic value
     if (opt.isCall) {
-      V[i] = callPayoff(S, opt.K);
+      V_in[i] = callPayoff(S, opt.K);
     } else {
-      V[i] = putPayoff(S, opt.K);
+      V_in[i] = putPayoff(S, opt.K);
     }
   }
-  // Implicit barrier here ensures all terminal values are computed
 
   // Step 2: Backward induction from t = N-1 down to t = 0
   for (int t = opt.N - 1; t >= 0; --t) {
-// Parallelize across the t+1 nodes at this time step
-// Note: As t decreases, parallelism declines (load imbalance)
-//
-// Variable scoping:
-// - shared: V, u_pow, d_pow, opt, params, t (same for all threads)
-#pragma omp parallel for schedule(static) shared(V, u_pow, d_pow, opt, params, t)
+    // Parallelize across the t+1 nodes at this time step
+    // Read from V_in (time t+1), write to V_out (time t)
+#pragma omp parallel for schedule(static)                                      \
+    shared(V_in, V_out, u_pow, d_pow, opt, params, t)
     for (int i = 0; i <= t; ++i) {
       // Stock price at node (t, i)
       double S = opt.S0 * u_pow[i] * d_pow[t - i];
 
       // Continuation value (hold the option)
-      double V_hold =
-          params.discount * (params.p * V[i + 1] + (1.0 - params.p) * V[i]);
+      // Use V_in which holds values from time t+1
+      double V_hold = params.discount *
+                      (params.p * V_in[i + 1] + (1.0 - params.p) * V_in[i]);
 
       // Exercise value (exercise immediately)
       double V_exercise;
@@ -93,13 +89,17 @@ double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads) {
       }
 
       // American option: max of hold vs exercise
-      V[i] = std::max(V_hold, V_exercise);
+      V_out[i] = std::max(V_hold, V_exercise);
     }
-    // Implicit barrier at end of parallel region
-    // Critical: ensures all V[i] at time t are computed before moving to t-1
+
+    // Swap buffers: V_out becomes V_in for the next iteration (t-1)
+    // We can just swap the data pointers or copy. Vector swap is O(1).
+    std::swap(V_in, V_out);
   }
 
-  return V[0];
+  // After the last swap (at t=0), the result is in V_in[0]
+  // (Because we computed into V_out, then swapped, so V_in has the result)
+  return V_in[0];
 }
 
 /**
