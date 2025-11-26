@@ -8,7 +8,7 @@ BIN_DIR = bin
 COMMON = src/common/option.cpp
 
 # Build all targets by default
-all: dirs serial openmp test_benchmarks test_correctness
+all: dirs serial openmp test_openmp_benchmarks test_openmp_correctness
 
 # Create output directory
 dirs:
@@ -23,12 +23,12 @@ openmp: src/openmp/openmp_main.cpp src/openmp/openmp_binomial.cpp src/serial/ser
 	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $(BIN_DIR)/openmp_binomial
 
 # Benchmark validation tests (numerical accuracy)
-test_benchmarks: tests/test_benchmarks.cpp src/serial/serial_binomial.cpp src/openmp/openmp_binomial.cpp $(COMMON)
-	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $(BIN_DIR)/test_benchmarks
+test_openmp_benchmarks: tests/test_openmp_benchmarks.cpp src/serial/serial_binomial.cpp src/openmp/openmp_binomial.cpp $(COMMON)
+	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $(BIN_DIR)/test_openmp_benchmarks
 
 # Correctness unit tests (mathematical properties)
-test_correctness: tests/test_correctness.cpp src/serial/serial_binomial.cpp src/openmp/openmp_binomial.cpp $(COMMON)
-	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $(BIN_DIR)/test_correctness
+test_openmp_correctness: tests/test_openmp_correctness.cpp src/serial/serial_binomial.cpp src/openmp/openmp_binomial.cpp $(COMMON)
+	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $(BIN_DIR)/test_openmp_correctness
 
 # Run all tests
 test: test_benchmarks test_correctness
