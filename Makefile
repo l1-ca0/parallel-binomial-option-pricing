@@ -1,7 +1,7 @@
 CXX = g++
 NVCC = nvcc
 CXXFLAGS = -O3 -std=c++17 -Wall
-NVCCFLAGS = -O3 -std=c++17 -arch=sm_70
+NVCCFLAGS = -O3 -std=c++17 -arch=sm_70 -ccbin g++-11
 OMPFLAGS = -fopenmp
 
 BIN_DIR = bin
