@@ -142,9 +142,16 @@ int main(int argc, char **argv) {
   }
   std::cout << "=== Performance Analysis ===" << std::endl;
   std::cout << std::fixed << std::setprecision(2);
-  std::cout << "  Speedup:                " << speedup << "x" << std::endl;
-  std::cout << "  Parallel Efficiency:    "
-            << (speedup / actual_threads * 100.0) << "%" << std::endl;
+  // Only print aggregated speedup/efficiency if omp_time was large enough
+  if (omp_time >= 1e-6) {
+    double speedup = serial_time / omp_time;
+    std::cout << "  Speedup:                " << speedup << "x" << std::endl;
+    std::cout << "  Parallel Efficiency:    "
+              << (speedup / actual_threads * 100.0) << "%" << std::endl;
+  } else {
+    std::cout << "  Speedup:                N/A" << std::endl;
+    std::cout << "  Parallel Efficiency:    N/A" << std::endl;
+  }
   std::cout << "  Time per barrier:       " << std::setprecision(3)
             << (omp_time / opt.N) << " ms" << std::endl;
 

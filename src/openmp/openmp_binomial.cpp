@@ -75,9 +75,7 @@ double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads) {
 //
 // Variable scoping:
 // - shared: V, u_pow, d_pow, opt, params, t (same for all threads)
-// - private: i, S, V_hold, V_exercise (unique per iteration)
-#pragma omp parallel for schedule(static)                                      \
-    shared(V, u_pow, d_pow, opt, params, t) private(S, V_hold, V_exercise)
+#pragma omp parallel for schedule(static) shared(V, u_pow, d_pow, opt, params, t)
     for (int i = 0; i <= t; ++i) {
       // Stock price at node (t, i)
       double S = opt.S0 * u_pow[i] * d_pow[t - i];
