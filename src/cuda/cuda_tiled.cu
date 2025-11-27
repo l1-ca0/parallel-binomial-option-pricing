@@ -1,4 +1,4 @@
-#include "cuda_tiled.cuh"
+#include "cuda_kernels.cuh"
 #include "cuda_utils.cuh"
 #include <cmath>
 #include <cuda_runtime.h>

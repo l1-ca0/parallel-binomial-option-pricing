@@ -1,5 +1,5 @@
-#include "cuda_utils.cuh" // Assuming this exists or I might need to create it for error checking
-#include "cuda_wavefront.cuh"
+#include "cuda_utils.cuh" 
+#include "cuda_kernels.cuh"
 #include <cmath>
 #include <cuda_runtime.h>
 #include <iostream>
