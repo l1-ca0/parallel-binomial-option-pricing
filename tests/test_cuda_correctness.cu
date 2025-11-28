@@ -154,6 +154,12 @@ int main() {
   });
   tiled.run();
 
+  CUDATestSuite tiled_warp_shuffle(
+      "WarpShuffleTiling", [](const OptionParams &opt) {
+        return priceAmericanOptionCUDAWarpShuffleTiling(opt);
+      });
+  tiled_warp_shuffle.run();  
+
   // Test TimeParallel
   CUDATestSuite time_parallel("TimeParallel", [](const OptionParams &opt) {
     return priceAmericanOptionTimeParallel(opt.S0, opt.K, opt.r, opt.sigma,

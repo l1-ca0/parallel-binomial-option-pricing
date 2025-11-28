@@ -134,6 +134,12 @@ int main(int argc, char **argv) {
       [](const OptionParams &o) { return priceAmericanOptionCUDATiled(o); },
       tests, verbose);
   run_benchmark(
+      "Tiled (Warp Shuffle)",
+      [](const OptionParams &o) {
+        return priceAmericanOptionCUDAWarpShuffleTiling(o);
+      },
+      tests, verbose);      
+  run_benchmark(
       "Time Parallel",
       [](const OptionParams &o) {
         return priceAmericanOptionTimeParallel(o.S0, o.K, o.r, o.sigma, o.T,

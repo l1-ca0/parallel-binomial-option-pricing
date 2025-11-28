@@ -8,6 +8,7 @@ double priceAmericanOptionCUDAWavefront(const OptionParams &opt);
 
 // Tiled Implementations
 double priceAmericanOptionCUDATiled(const OptionParams &opt);
+double priceAmericanOptionCUDAWarpShuffleTiling(const OptionParams &opt);
 
 // Time Parallel Implementation
 double priceAmericanOptionTimeParallel(double S0, double K, double r,
