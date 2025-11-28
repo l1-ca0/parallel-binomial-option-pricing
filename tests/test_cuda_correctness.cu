@@ -161,6 +161,13 @@ int main() {
   });
   time_parallel.run();
 
+  // Test Cooperative Multi Warp
+  CUDATestSuite cooperative_multi_warp(
+      "CooperativeMultiWarp", [](const OptionParams &opt) {
+        return priceAmericanOptionCUDACooperativeMultiWarp(
+            opt.S0, opt.K, opt.r, opt.sigma, opt.T, opt.N, opt.isCall);
+      });
+  cooperative_multi_warp.run();
 
   std::cout << "=== Summary ===" << std::endl;
   std::cout << "Total:  " << tests_run << std::endl;

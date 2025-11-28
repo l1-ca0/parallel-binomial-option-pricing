@@ -14,4 +14,11 @@ double priceAmericanOptionTimeParallel(double S0, double K, double r,
                                        double sigma, double T, int N,
                                        bool isCall);
 
+
+// Multi-Warp Implementation
+double priceAmericanOptionCUDACooperativeMultiWarp(double S0, double K,
+                                                   double r, double sigma,
+                                                   double T, int N,
+                                                   bool isCall);
+
 #endif // CUDA_KERNELS_CUH

@@ -140,6 +140,13 @@ int main(int argc, char **argv) {
                                                o.N, o.isCall);
       },
       tests, verbose);
+run_benchmark(
+      "Cooperative Multi Warp",
+      [](const OptionParams &o) {
+        return priceAmericanOptionCUDACooperativeMultiWarp(
+            o.S0, o.K, o.r, o.sigma, o.T, o.N, o.isCall);
+      },
+      tests, verbose);
 
   return 0;
 }
