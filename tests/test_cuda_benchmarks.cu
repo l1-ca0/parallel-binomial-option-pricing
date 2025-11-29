@@ -124,35 +124,49 @@ int main(int argc, char **argv) {
 
   std::cout << "Loaded " << tests.size() << " test cases." << std::endl
             << std::endl;
+  run_benchmark(
+    "Wavefront",
+    [](const OptionParams &o) {
+      return priceAmericanOptionCUDAWavefront(o);
+    },
+    tests, verbose);
 
   run_benchmark(
-      "Wavefront",
-      [](const OptionParams &o) { return priceAmericanOptionCUDAWavefront(o); },
-      tests, verbose);
+    "Tiled",
+    [](const OptionParams &o) {
+      return priceAmericanOptionCUDATiled(o);
+    },
+    tests, verbose);
+
   run_benchmark(
-      "Tiled",
-      [](const OptionParams &o) { return priceAmericanOptionCUDATiled(o); },
-      tests, verbose);
+    "Tiled (Warp Shuffle)",
+    [](const OptionParams &o) {
+      return priceAmericanOptionCUDAWarpShuffleTiling(o);
+    },
+    tests, verbose);
+
   run_benchmark(
-      "Tiled (Warp Shuffle)",
-      [](const OptionParams &o) {
-        return priceAmericanOptionCUDAWarpShuffleTiling(o);
-      },
-      tests, verbose);      
+    "Time Parallel",
+    [](const OptionParams &o) {
+      return priceAmericanOptionTimeParallel(o.S0, o.K, o.r, o.sigma, o.T,
+                                            o.N, o.isCall);
+    },
+    tests, verbose);
+
   run_benchmark(
-      "Time Parallel",
-      [](const OptionParams &o) {
-        return priceAmericanOptionTimeParallel(o.S0, o.K, o.r, o.sigma, o.T,
-                                               o.N, o.isCall);
-      },
-      tests, verbose);
-run_benchmark(
-      "Cooperative Multi Warp",
-      [](const OptionParams &o) {
-        return priceAmericanOptionCUDACooperativeMultiWarp(
-            o.S0, o.K, o.r, o.sigma, o.T, o.N, o.isCall);
-      },
-      tests, verbose);
+    "Cooperative Multi Warp",
+    [](const OptionParams &o) {
+      return priceAmericanOptionCUDACooperativeMultiWarp(
+        o.S0, o.K, o.r, o.sigma, o.T, o.N, o.isCall);
+    },
+    tests, verbose);
+
+  run_benchmark(
+    "Persistent (Global Barrier)",
+    [](const OptionParams &o) {
+      return priceAmericanOptionCUDAPersistentGlobalBarrier(o);
+    },
+    tests, verbose);
 
   return 0;
 }

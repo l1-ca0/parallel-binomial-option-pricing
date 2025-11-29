@@ -149,31 +149,45 @@ int main() {
   wavefront.run();
 
   // Test Tiled
-  CUDATestSuite tiled("Tiled", [](const OptionParams &opt) {
-    return priceAmericanOptionCUDATiled(opt);
-  });
+  CUDATestSuite tiled(
+    "Tiled",
+    [](const OptionParams &opt) {
+      return priceAmericanOptionCUDATiled(opt);
+    });
   tiled.run();
 
   CUDATestSuite tiled_warp_shuffle(
-      "WarpShuffleTiling", [](const OptionParams &opt) {
-        return priceAmericanOptionCUDAWarpShuffleTiling(opt);
-      });
-  tiled_warp_shuffle.run();  
+    "WarpShuffleTiling",
+    [](const OptionParams &opt) {
+      return priceAmericanOptionCUDAWarpShuffleTiling(opt);
+    });
+  tiled_warp_shuffle.run();
 
   // Test TimeParallel
-  CUDATestSuite time_parallel("TimeParallel", [](const OptionParams &opt) {
-    return priceAmericanOptionTimeParallel(opt.S0, opt.K, opt.r, opt.sigma,
-                                           opt.T, opt.N, opt.isCall);
-  });
+  CUDATestSuite time_parallel(
+    "TimeParallel",
+    [](const OptionParams &opt) {
+      return priceAmericanOptionTimeParallel(opt.S0, opt.K, opt.r, opt.sigma,
+                                            opt.T, opt.N, opt.isCall);
+    });
   time_parallel.run();
 
   // Test Cooperative Multi Warp
   CUDATestSuite cooperative_multi_warp(
-      "CooperativeMultiWarp", [](const OptionParams &opt) {
-        return priceAmericanOptionCUDACooperativeMultiWarp(
-            opt.S0, opt.K, opt.r, opt.sigma, opt.T, opt.N, opt.isCall);
-      });
+    "CooperativeMultiWarp",
+    [](const OptionParams &opt) {
+      return priceAmericanOptionCUDACooperativeMultiWarp(
+        opt.S0, opt.K, opt.r, opt.sigma, opt.T, opt.N, opt.isCall);
+    });
   cooperative_multi_warp.run();
+
+  // Test Persistent (Global Barrier)
+  CUDATestSuite persistent_global_barrier(
+    "PersistentGlobalBarrier",
+    [](const OptionParams &opt) {
+      return priceAmericanOptionCUDAPersistentGlobalBarrier(opt);
+    });
+  persistent_global_barrier.run();
 
   std::cout << "=== Summary ===" << std::endl;
   std::cout << "Total:  " << tests_run << std::endl;
