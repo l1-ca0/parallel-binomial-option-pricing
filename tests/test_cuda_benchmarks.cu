@@ -137,7 +137,12 @@ int main(int argc, char **argv) {
       return priceAmericanOptionCUDATiled(o);
     },
     tests, verbose);
-
+  run_benchmark(
+      "Tiled (Shared Mem)",
+      [](const OptionParams &o) {
+        return priceAmericanOptionCUDASharedMemTiling(o);
+      },
+      tests, verbose);
   run_benchmark(
     "Tiled (Warp Shuffle)",
     [](const OptionParams &o) {

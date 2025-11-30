@@ -156,6 +156,14 @@ int main() {
     });
   tiled.run();
 
+  // Tiled (Shared Mem Tiling)
+  CUDATestSuite tiled_shared_mem(
+      "SharedMemTiling", [](const OptionParams &opt) {
+        return priceAmericanOptionCUDASharedMemTiling(opt);
+      });
+  tiled_shared_mem.run();
+  
+  // Tiled (Warp Shuffle Tiling)
   CUDATestSuite tiled_warp_shuffle(
     "WarpShuffleTiling",
     [](const OptionParams &opt) {
