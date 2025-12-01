@@ -171,6 +171,13 @@ int main() {
     });
   tiled_warp_shuffle.run();
 
+  // Tiled (Independent Multi Warp)
+  CUDATestSuite tiled_independent_multi_warp(
+      "IndependentMultiWarp", [](const OptionParams &opt) {
+        return priceAmericanOptionCUDAIndependentMultiWarp(opt);
+      });
+  tiled_independent_multi_warp.run();
+
   // Test TimeParallel
   CUDATestSuite time_parallel(
     "TimeParallel",

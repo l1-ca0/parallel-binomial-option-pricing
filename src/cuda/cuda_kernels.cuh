@@ -10,6 +10,7 @@ double priceAmericanOptionCUDAWavefront(const OptionParams &opt);
 double priceAmericanOptionCUDATiled(const OptionParams &opt);
 double priceAmericanOptionCUDASharedMemTiling(const OptionParams &opt);
 double priceAmericanOptionCUDAWarpShuffleTiling(const OptionParams &opt);
+double priceAmericanOptionCUDAIndependentMultiWarp(const OptionParams &opt);
 
 // Persistent Implementations
 double priceAmericanOptionCUDAPersistentGlobalBarrier(const OptionParams &opt);

@@ -149,7 +149,12 @@ int main(int argc, char **argv) {
       return priceAmericanOptionCUDAWarpShuffleTiling(o);
     },
     tests, verbose);
-
+  run_benchmark(
+      "Tiled (Indep Multi Warp)",
+      [](const OptionParams &o) {
+        return priceAmericanOptionCUDAIndependentMultiWarp(o);
+      },
+      tests, verbose);
   run_benchmark(
     "Time Parallel",
     [](const OptionParams &o) {
