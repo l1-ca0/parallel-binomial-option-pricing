@@ -165,6 +165,13 @@ int main() {
   
   // Tiled (Warp Shuffle Tiling)
   CUDATestSuite tiled_warp_shuffle(
+      "WarpShuffleTiling", [](const OptionParams &opt) {
+        return priceAmericanOptionCUDAWarpShuffleTiling(opt);
+      });
+  tiled_warp_shuffle.run();
+
+  // Tiled (Warp Shuffle Tiling)
+  CUDATestSuite tiled_warp_shuffle(
     "WarpShuffleTiling",
     [](const OptionParams &opt) {
       return priceAmericanOptionCUDAWarpShuffleTiling(opt);

@@ -150,6 +150,12 @@ int main(int argc, char **argv) {
     },
     tests, verbose);
   run_benchmark(
+      "Tiled (Warp Per Block)",
+      [](const OptionParams &o) {
+        return priceAmericanOptionCUDAWarpPerBlock(o);
+      },
+      tests, verbose);
+  run_benchmark(
       "Tiled (Indep Multi Warp)",
       [](const OptionParams &o) {
         return priceAmericanOptionCUDAIndependentMultiWarp(o);
