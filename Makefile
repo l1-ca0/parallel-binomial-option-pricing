@@ -72,6 +72,9 @@ $(BIN_DIR)/test_openmp_benchmarks: tests/test_openmp_benchmarks.cpp $(COMMON) sr
 $(BIN_DIR)/benchmark_openmp: benchmarks/benchmark_openmp.cpp src/openmp/openmp_binomial.cpp src/serial/serial_binomial.cpp $(COMMON)
 	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $@
 
+$(BIN_DIR)/benchmark_openmp_dynamic: benchmarks/benchmark_openmp_dynamic.cpp src/openmp/openmp_binomial.cpp src/serial/serial_binomial.cpp $(COMMON)
+	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $@
+
 # CUDA implementation
 $(BIN_DIR)/cuda_binomial: $(CUDA_MAIN) $(CUDA_SRCS) $(COMMON)
 	$(NVCC) $(NVCCFLAGS) $^ -o $@
