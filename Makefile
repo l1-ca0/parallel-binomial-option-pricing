@@ -16,7 +16,7 @@ CUDA_SRCS = $(filter-out $(CUDA_MAIN), $(CUDA_ALL_SRCS))
 
 # Define targets
 SERIAL_TARGETS = $(BIN_DIR)/serial_binomial
-OPENMP_TARGETS = $(BIN_DIR)/openmp_binomial $(BIN_DIR)/test_openmp_correctness $(BIN_DIR)/test_openmp_benchmarks
+OPENMP_TARGETS = $(BIN_DIR)/openmp_binomial $(BIN_DIR)/test_openmp_correctness $(BIN_DIR)/test_openmp_benchmarks $(BIN_DIR)/benchmark_openmp
 CUDA_TARGETS = $(BIN_DIR)/cuda_binomial $(BIN_DIR)/test_cuda_correctness $(BIN_DIR)/test_cuda_benchmarks $(BIN_DIR)/benchmark_cuda
 MPI_TARGETS = $(BIN_DIR)/mpi_batch
 
@@ -67,6 +67,9 @@ $(BIN_DIR)/test_openmp_correctness: tests/test_openmp_correctness.cpp $(COMMON) 
 	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $@
 
 $(BIN_DIR)/test_openmp_benchmarks: tests/test_openmp_benchmarks.cpp $(COMMON) src/serial/serial_binomial.cpp src/openmp/openmp_binomial.cpp
+	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $@
+
+$(BIN_DIR)/benchmark_openmp: benchmarks/benchmark_openmp.cpp src/openmp/openmp_binomial.cpp src/serial/serial_binomial.cpp $(COMMON)
 	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $@
 
 # CUDA implementation
