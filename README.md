@@ -19,8 +19,8 @@ This project implements the Binomial Options Pricing Model (BOPM) using a suite 
     *   MPI: Distributed Memory Master-Worker pattern for massive batch processing.
 *   **Hybrid Adaptive GPU Pipeline:** Dynamically switches execution strategies based on problem size (N):
     *   Large N: Shared Memory Tiling + Thread Coarsening (Max Throughput).
-    *   Medium N: Warp Per Block Kernel (Low Overhead).
-    *   Small N: CPU Fallback (Zero Launch Latency).
+    *   Medium N: Warp Per Block Kernel (Low Latency).
+    *   Small N: CPU Fallback (Zero Launch Overhead).
 *   **Advanced Synchronization:** Explores Global Barriers, Warp Shuffles, and Implicit Warp Synchronization.
 *   **Cluster Scalability:** MPI implementation demonstrates 95% efficiency strong scaling on 8 ranks.
 
