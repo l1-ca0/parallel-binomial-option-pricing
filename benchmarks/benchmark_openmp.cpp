@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 
+#include <fstream>
+
+// Helper to run benchmark and output to stream
 void run_benchmark(int N, const std::string &method_name,
                    std::function<double(const OptionParams &)> pricer) {
   OptionParams opt;
@@ -63,14 +66,29 @@ int main() {
 
     for (int t : thread_counts) {
       if (t > max_threads)
-        continue; // Skip if requesting more threads than available hardware
+        continue;
 
       omp_set_num_threads(t);
-      std::string method_name = "OpenMP (" + std::to_string(t) + " threads)";
 
-      run_benchmark(N, method_name, [](const OptionParams &opt) {
-        return priceAmericanOptionOpenMP(opt);
-      });
+      // Static Scheduling (Default - Skip in dynamic-only mode)
+      if (!dynamic_only) {
+        run_benchmark(
+            N, "OpenMP (Static, " + std::to_string(t) + " threads)",
+            [t](const OptionParams &p) {
+              return priceAmericanOptionOpenMP(p, t);
+            },
+            out);
+      }
+
+      // Dynamic Scheduling (Comparison - Always run if dynamic_only or normal)
+      // Note: If normal mode (dynamic_only=false), we run both.
+      // If dynamic_only=true, we ONLY run this.
+      run_benchmark(
+          N, "OpenMP (Dynamic, " + std::to_string(t) + " threads)",
+          [t](const OptionParams &p) {
+            return priceAmericanOptionOpenMPDynamic(p, t);
+          },
+          out);
     }
   }
 

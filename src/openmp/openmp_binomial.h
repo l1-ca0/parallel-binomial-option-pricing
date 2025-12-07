@@ -37,6 +37,17 @@ double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads = 0);
 double priceEuropeanOptionOpenMP(const OptionParams &opt, int num_threads = 0);
 
 /**
+ * Price an American option using OpenMP parallelization with Dynamic scheduling
+ * Used for comparing scheduling strategies (Static vs Dynamic)
+ *
+ * @param opt Option parameters
+ * @param num_threads Number of OpenMP threads
+ * @return Option price at t=0
+ */
+double priceAmericanOptionOpenMPDynamic(const OptionParams &opt,
+                                        int num_threads = 0);
+
+/**
  * Get the number of OpenMP threads being used
  * @return Number of threads
  */

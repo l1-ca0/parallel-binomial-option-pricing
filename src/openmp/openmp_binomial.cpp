@@ -168,3 +168,73 @@ int getOMPThreadCount() {
   }
   return num_threads;
 }
+/**
+ * OpenMP parallel American option pricer using Dynamic Scheduling
+ * Used for benchmarking purposes to compare against Static scheduling.
+ */
+double priceAmericanOptionOpenMPDynamic(const OptionParams &opt, int num_threads) {
+  // Set number of threads if specified
+  if (num_threads > 0) {
+    omp_set_num_threads(num_threads);
+  }
+
+  // Compute binomial parameters (includes validation)
+  BinomialParams params = computeBinomialParams(opt);
+
+  // Allocate space for option values at current time step
+  std::vector<double> V_in(opt.N + 1);
+  std::vector<double> V_out(opt.N + 1);
+
+  // Precompute powers of u and d for efficiency
+  std::vector<double> u_pow(opt.N + 1); // u^i for i=0..N
+  std::vector<double> d_pow(opt.N + 1); // d^i for i=0..N
+  
+  u_pow[0] = 1.0;
+  d_pow[0] = 1.0;
+  for (int i = 1; i <= opt.N; ++i) {
+    u_pow[i] = u_pow[i - 1] * params.u;
+    d_pow[i] = d_pow[i - 1] * params.d;
+  }
+
+  // Hoisted parallel region
+  #pragma omp parallel shared(V_in, V_out, u_pow, d_pow, opt, params)
+  {
+    // Step 1: Initialize terminal values (Dynamic Scheduling)
+    #pragma omp for schedule(dynamic, 1024)
+    for (int i = 0; i <= opt.N; ++i) {
+      double S = opt.S0 * u_pow[i] * d_pow[opt.N - i];
+      if (opt.isCall) {
+        V_in[i] = callPayoff(S, opt.K);
+      } else {
+        V_in[i] = putPayoff(S, opt.K);
+      }
+    }
+
+    // Step 2: Backward induction
+    for (int t = opt.N - 1; t >= 0; --t) {
+      // Dynamic Scheduling for time stepping
+      #pragma omp for schedule(dynamic, 1024)
+      for (int i = 0; i <= t; ++i) {
+        double S = opt.S0 * u_pow[i] * d_pow[t - i];
+
+        double V_hold = params.discount *
+                        (params.p * V_in[i + 1] + (1.0 - params.p) * V_in[i]);
+
+        double V_exercise;
+        if (opt.isCall) {
+          V_exercise = callPayoff(S, opt.K);
+        } else {
+          V_exercise = putPayoff(S, opt.K);
+        }
+
+        V_out[i] = std::max(V_hold, V_exercise);
+      }
+
+      // Swap buffers (Single thread)
+      #pragma omp single
+      { std::swap(V_in, V_out); }
+    }
+  }
+
+  return V_in[0];
+}
