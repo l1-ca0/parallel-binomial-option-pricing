@@ -49,52 +49,61 @@ double priceAmericanOptionOpenMP(const OptionParams &opt, int num_threads) {
     d_pow[i] = d_pow[i - 1] * params.d;
   }
 
-  // Step 1: Initialize terminal values at expiration (t = N)
-  // Initialize into V_in (which represents values at time t+1)
-#pragma omp parallel for schedule(static)                                      \
-    shared(V_in, u_pow, d_pow, opt, params)
-  for (int i = 0; i <= opt.N; ++i) {
-    // Stock price: S0 * u^i * d^(N-i)
-    double S = opt.S0 * u_pow[i] * d_pow[opt.N - i];
+// Step 1: Initialize terminal values at expiration (t = N)
+// Initialize into V_in (which represents values at time t+1)
 
-    // Terminal value = intrinsic value
-    if (opt.isCall) {
-      V_in[i] = callPayoff(S, opt.K);
-    } else {
-      V_in[i] = putPayoff(S, opt.K);
-    }
-  }
+// Start parallel region ONCE to avoid repeated thread creation overhead
+#pragma omp parallel shared(V_in, V_out, u_pow, d_pow, opt, params)
+  {
+// Initialize terminal values
+#pragma omp for schedule(static)
+    for (int i = 0; i <= opt.N; ++i) {
+      // Stock price: S0 * u^i * d^(N-i)
+      double S = opt.S0 * u_pow[i] * d_pow[opt.N - i];
 
-  // Step 2: Backward induction from t = N-1 down to t = 0
-  for (int t = opt.N - 1; t >= 0; --t) {
-    // Parallelize across the t+1 nodes at this time step
-    // Read from V_in (time t+1), write to V_out (time t)
-#pragma omp parallel for schedule(static)                                      \
-    shared(V_in, V_out, u_pow, d_pow, opt, params, t)
-    for (int i = 0; i <= t; ++i) {
-      // Stock price at node (t, i)
-      double S = opt.S0 * u_pow[i] * d_pow[t - i];
-
-      // Continuation value (hold the option)
-      // Use V_in which holds values from time t+1
-      double V_hold = params.discount *
-                      (params.p * V_in[i + 1] + (1.0 - params.p) * V_in[i]);
-
-      // Exercise value (exercise immediately)
-      double V_exercise;
+      // Terminal value = intrinsic value
       if (opt.isCall) {
-        V_exercise = callPayoff(S, opt.K);
+        V_in[i] = callPayoff(S, opt.K);
       } else {
-        V_exercise = putPayoff(S, opt.K);
+        V_in[i] = putPayoff(S, opt.K);
+      }
+    }
+
+    // Step 2: Backward induction from t = N-1 down to t = 0
+    for (int t = opt.N - 1; t >= 0; --t) {
+// Parallelize across the t+1 nodes at this time step
+// Read from V_in (time t+1), write to V_out (time t)
+#pragma omp for schedule(static)
+      for (int i = 0; i <= t; ++i) {
+        // Stock price at node (t, i)
+        double S = opt.S0 * u_pow[i] * d_pow[t - i];
+
+        // Continuation value (hold the option)
+        // Use V_in which holds values from time t+1
+        double V_hold = params.discount *
+                        (params.p * V_in[i + 1] + (1.0 - params.p) * V_in[i]);
+
+        // Exercise value (exercise immediately)
+        double V_exercise;
+        if (opt.isCall) {
+          V_exercise = callPayoff(S, opt.K);
+        } else {
+          V_exercise = putPayoff(S, opt.K);
+        }
+
+        // American option: max of hold vs exercise
+        V_out[i] = std::max(V_hold, V_exercise);
       }
 
-      // American option: max of hold vs exercise
-      V_out[i] = std::max(V_hold, V_exercise);
+// Swap buffers: V_out becomes V_in for the next iteration (t-1)
+// Only one thread should perform the swap to avoid data races.
+// The implicit barrier at the end of 'single' ensures all threads see
+// the new pointers before the next iteration.
+#pragma omp single
+      {
+        std::swap(V_in, V_out);
+      }
     }
-
-    // Swap buffers: V_out becomes V_in for the next iteration (t-1)
-    // We can just swap the data pointers or copy. Vector swap is O(1).
-    std::swap(V_in, V_out);
   }
 
   // After the last swap (at t=0), the result is in V_in[0]
