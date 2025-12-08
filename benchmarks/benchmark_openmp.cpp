@@ -70,25 +70,19 @@ int main() {
 
       omp_set_num_threads(t);
 
-      // Static Scheduling (Default - Skip in dynamic-only mode)
-      if (!dynamic_only) {
-        run_benchmark(
-            N, "OpenMP (Static, " + std::to_string(t) + " threads)",
-            [t](const OptionParams &p) {
-              return priceAmericanOptionOpenMP(p, t);
-            },
-            out);
-      }
+      // Static Scheduling
+      run_benchmark(
+          N, "OpenMP (Static, " + std::to_string(t) + " threads)",
+          [t](const OptionParams &p) {
+            return priceAmericanOptionOpenMP(p, t);
+          });
 
-      // Dynamic Scheduling (Comparison - Always run if dynamic_only or normal)
-      // Note: If normal mode (dynamic_only=false), we run both.
-      // If dynamic_only=true, we ONLY run this.
+      // Dynamic Scheduling (Comparison)
       run_benchmark(
           N, "OpenMP (Dynamic, " + std::to_string(t) + " threads)",
           [t](const OptionParams &p) {
             return priceAmericanOptionOpenMPDynamic(p, t);
-          },
-          out);
+          });
     }
   }
 
