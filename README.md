@@ -4,9 +4,9 @@
 
 📄 **[Read the Full Project Report (PDF)](docs/Parallel_BOPM_Report.pdf)**
 
-This project implements the Binomial Options Pricing Model (BOPM) using a suite of parallel architectures: Serial, OpenMP (Multi-core), CUDA (GPU), and MPI (Distributed Cluster). It features a highly optimized Hybrid Adaptive Pipeline on the GPU that achieves 384x speedup over the serial baseline and 9.35x speedup over optimized 8-core OpenMP execution.
+This project implements a high-performance parallel pricing engine for American options using the Binomial Options Pricing Model (BOPM), engineered to scale efficiently from multi-core CPUs to GPU-accelerated clusters. By leveraging OpenMP, CUDA and MPI, it addresses the algorithm's sequential bottlenecks through a diverse set of optimization strategies. The core achievement is a Hybrid Adaptive CPU-GPU Pipeline that switches execution kernels based on problem size, delivering a 384x speedup over the serial baseline and a 9.35x speedup over optimized 8-core OpenMP execution.
 
-*All experiments were conducted on the CMU GHC machines, featuring an **8-core Intel CPU** and a single **NVIDIA GeForce RTX 2080 GPU**.*
+*All experiments were conducted on the CMU GHC machines, featuring an 8-core Intel CPU and a single NVIDIA GeForce RTX 2080 GPU.*
 
 ---
 
@@ -18,10 +18,11 @@ This project implements the Binomial Options Pricing Model (BOPM) using a suite 
     *   CUDA: Suite of 10 distinct GPU kernels exploring the Latency-Throughput trade-off.
     *   MPI: Distributed Memory Master-Worker pattern for massive batch processing.
 *   **Hybrid Adaptive GPU Pipeline:** Dynamically switches execution strategies based on problem size (N):
-    *   Large N: Shared Memory Tiling + Thread Coarsening (Max Throughput).
+    *   Large N: Shared Memory Tiling + Thread Coarsening (High Throughput).
     *   Medium N: Warp Per Block Kernel (Low Latency).
     *   Small N: CPU Fallback (Zero Launch Overhead).
-*   **Advanced Synchronization:** Explores Global Barriers, Warp Shuffles, and Implicit Warp Synchronization.
+*   **Advanced Synchronization:** Utilization of Warp Shuffles, Persistent Barriers, and Cooperative Groups to minimize synchronization overhead.
+*   **Algorithmic Optimizations:** Implementation of Deep Temporal Tiling, Register Tiling, and O(N) memory complexity to maximize data locality.
 *   **Cluster Scalability:** MPI implementation demonstrates 95% efficiency strong scaling on 8 ranks.
 
 ---
@@ -45,7 +46,7 @@ This project implements the Binomial Options Pricing Model (BOPM) using a suite 
 
 **MPI for CPU/GPU Cluster**
 
-Below results use Serial CPU as backend.
+The following results utilize the Serial CPU backend, though the architecture also seamlessly supports OpenMP, GPU, and Hybrid CPU-GPU backends.
 | Ranks | Time (1000 Options) | Speedup | Efficiency |
 | :--- | :--- | :--- | :--- |
 | 1 | 13.84 s | 1.00x | 100% |
@@ -120,7 +121,7 @@ mpirun -np 8 ./bin/mpi_batch 5000 2000 openmp
 
 ---
 
-## Visualization
+## BOPM Visualization
 The core binomial option pricing algorithm visualised (Forward Lattice Construction -> Backward Induction):
 
 ![Binomial Option Pricing Animation](binomial_pricing.gif)
